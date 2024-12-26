@@ -9,6 +9,10 @@ import UIKit
 
 class MainViewController: UIViewController {
     
+    private var popularMovies = [Movie]()
+    private var topRatedMovies = [Movie]()
+    private var upcomingMovies = [Movie]()
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         
@@ -66,10 +70,47 @@ class MainViewController: UIViewController {
 
 extension MainViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        0
+        switch Section(rawValue: section) {
+        case .popular: popularMovies.count
+        case .topRated: topRatedMovies.count
+        case .upcoming: upcomingMovies.count
+        default: 0
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        return UICollectionViewCell()
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PosterCell.identifier, for: indexPath) as? PosterCell else {
+            return UICollectionViewCell()
+        }
+        
+        switch Section(rawValue: indexPath.section) {
+        case .popular:
+            cell.configure(with: popularMovies[indexPath.item])
+        case .topRated:
+            cell.configure(with: popularMovies[indexPath.item])
+        case .upcoming:
+            cell.configure(with: popularMovies[indexPath.item])
+        default:
+            return UICollectionViewCell()
+        }
+        
+        return cell
+    }
+    
+    // section 별 Header 지정
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        // footer는 구현 X, header일 경우만 구현
+        guard
+            kind == UICollectionView.elementKindSectionHeader,
+            let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderView.identifier, for: indexPath) as? SectionHeaderView
+        else {
+            return UICollectionReusableView()
+        }
+        
+        let sectionType = Section.allCases[indexPath.section]
+        
+        headerView.configure(with: sectionType.title)
+        
+        return headerView
     }
 }
