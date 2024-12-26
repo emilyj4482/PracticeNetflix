@@ -7,6 +7,7 @@
 
 import UIKit
 import RxSwift
+import AVKit
 
 class MainViewController: UIViewController {
     
@@ -192,6 +193,65 @@ extension MainViewController: UICollectionViewDataSource {
     }
 }
 
+// 연습
+extension MainViewController {
+    // private func playVideo(with url: URL) {
+    private func playVideo() {
+        guard let url = URL(string: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4") else { return }
+        
+        let player = AVPlayer(url: url)
+        
+        let playerViewController = AVPlayerViewController()
+        playerViewController.player = player
+        
+        present(playerViewController, animated: true) {
+            player.play()
+        }
+    }
+}
+
 extension MainViewController: UICollectionViewDelegate {
-    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        // playVideo()
+        switch Section(rawValue: indexPath.section) {
+        case .popular:
+            vm.fetchTrailerKey(movie: popularMovies[indexPath.item])
+                .observe(on: MainScheduler.instance)
+                .subscribe(
+                    onSuccess: { _ in // [weak self] in
+                        print("")
+                    },
+                    onFailure: { error in
+                        print("error occurred : \(error.localizedDescription)")
+                    }
+                )
+                .disposed(by: disposeBag)
+        case .topRated:
+            vm.fetchTrailerKey(movie: topRatedMovies[indexPath.item])
+                .observe(on: MainScheduler.instance)
+                .subscribe(
+                    onSuccess: { _ in // [weak self] in
+                        print("")
+                    },
+                    onFailure: { error in
+                        print("error occurred : \(error.localizedDescription)")
+                    }
+                )
+                .disposed(by: disposeBag)
+        case .upcoming:
+            vm.fetchTrailerKey(movie: upcomingMovies[indexPath.item])
+                .observe(on: MainScheduler.instance)
+                .subscribe(
+                    onSuccess: { _ in // [weak self] in
+                        print("")
+                    },
+                    onFailure: { error in
+                        print("error occurred : \(error.localizedDescription)")
+                    }
+                )
+                .disposed(by: disposeBag)
+        default:
+            print("")
+        }
+    }
 }
