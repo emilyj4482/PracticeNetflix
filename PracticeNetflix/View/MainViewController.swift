@@ -6,8 +6,13 @@
 //
 
 import UIKit
+import RxSwift
 
 class MainViewController: UIViewController {
+    
+    private let disposeBag = DisposeBag()
+    
+    private let vm = MainViewModel()
     
     private var popularMovies = [Movie]()
     private var topRatedMovies = [Movie]()
@@ -43,7 +48,7 @@ class MainViewController: UIViewController {
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
         // 각 group은 화면 너비의 25% 차지, 높이는 화면의 40%
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.25), heightDimension: .fractionalHeight(0.4))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.25), heightDimension: .fractionalHeight(0.25))
         
         // horizontal로 구성
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
@@ -54,11 +59,21 @@ class MainViewController: UIViewController {
         section.interGroupSpacing = 10
         section.contentInsets = .init(top: 10, leading: 10, bottom: 20, trailing: 10)
         
-        return UICollectionViewLayout()
+        // header layout
+        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(44))
+        
+        let header = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
+        
+        // header를 section에 추가
+        section.boundarySupplementaryItems = [header]
+        
+        return UICollectionViewCompositionalLayout(section: section)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupUI()
+        bind()
     }
     
     private func setupUI() {
@@ -82,9 +97,55 @@ class MainViewController: UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor)
         ])
     }
+    
+    private func bind() {
+        vm.popularMovieSubject
+            .observe(on: MainScheduler.instance)        // collectionView.reloadData() 는 ui 로직이기 때문에 main 스레드에 할당해줘야 한다.
+            .subscribe(
+                onNext: { [weak self] movies in
+                    self?.popularMovies = movies
+                    self?.collectionView.reloadData()
+                },
+                onError: { error in
+                    // error 발생 시 이벤트 처리
+                    print("error occurred : \(error.localizedDescription)")
+                }
+            )
+            .disposed(by: disposeBag)
+        
+        vm.topRatedMovieSubject
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { [weak self] movies in
+                    self?.topRatedMovies = movies
+                    self?.collectionView.reloadData()
+                },
+                onError: { error in
+                    print("error occurred : \(error.localizedDescription)")
+                }
+            )
+            .disposed(by: disposeBag)
+        
+        vm.upcomingMovieSubject
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { [weak self] movies in
+                    self?.upcomingMovies = movies
+                    self?.collectionView.reloadData()
+                },
+                onError: { error in
+                    print("error occurred : \(error.localizedDescription)")
+                }
+            )
+            .disposed(by: disposeBag)
+    }
 }
 
-extension MainViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+extension MainViewController: UICollectionViewDataSource {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        Section.allCases.count
+    }
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch Section(rawValue: section) {
         case .popular: popularMovies.count
@@ -103,9 +164,9 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
         case .popular:
             cell.configure(with: popularMovies[indexPath.item])
         case .topRated:
-            cell.configure(with: popularMovies[indexPath.item])
+            cell.configure(with: topRatedMovies[indexPath.item])
         case .upcoming:
-            cell.configure(with: popularMovies[indexPath.item])
+            cell.configure(with: upcomingMovies[indexPath.item])
         default:
             return UICollectionViewCell()
         }
@@ -129,4 +190,8 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
         
         return headerView
     }
+}
+
+extension MainViewController: UICollectionViewDelegate {
+    
 }
