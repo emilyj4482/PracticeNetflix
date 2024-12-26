@@ -37,6 +37,22 @@ class MainViewController: UIViewController {
     }()
     
     private var collectionViewLayout: UICollectionViewLayout {
+        // 각 item이 각 그룹 내에서 전체 너비와 전체 높이를 차지 (컬렉션 뷰 구성은 section > group > item 순인데 group을 구현하지 않으므로 현재 cell이 group이자 item임 - group 안에 하나의 item이 가득 차있음)
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        
+        // 각 group은 화면 너비의 25% 차지, 높이는 화면의 40%
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.25), heightDimension: .fractionalHeight(0.4))
+        
+        // horizontal로 구성
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
+        // 스크롤이 연속적으로 가능하게 하도록 지정
+        section.orthogonalScrollingBehavior = .continuous
+        section.interGroupSpacing = 10
+        section.contentInsets = .init(top: 10, leading: 10, bottom: 20, trailing: 10)
         
         return UICollectionViewLayout()
     }
