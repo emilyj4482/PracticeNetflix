@@ -9,6 +9,8 @@ import UIKit
 
 class MainViewController: UIViewController {
     
+    private let vm = MainViewModel()
+    
     private var popularMovies = [Movie]()
     private var topRatedMovies = [Movie]()
     private var upcomingMovies = [Movie]()
@@ -43,7 +45,7 @@ class MainViewController: UIViewController {
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
         // 각 group은 화면 너비의 25% 차지, 높이는 화면의 40%
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.25), heightDimension: .fractionalHeight(0.4))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.25), heightDimension: .fractionalHeight(0.25))
         
         // horizontal로 구성
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
@@ -54,11 +56,21 @@ class MainViewController: UIViewController {
         section.interGroupSpacing = 10
         section.contentInsets = .init(top: 10, leading: 10, bottom: 20, trailing: 10)
         
-        return UICollectionViewLayout()
+        // header layout
+        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(44))
+        
+        let header = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
+        
+        // header를 section에 추가
+        section.boundarySupplementaryItems = [header]
+        
+        return UICollectionViewCompositionalLayout(section: section)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupUI()
+        bind()
     }
     
     private func setupUI() {
@@ -82,9 +94,18 @@ class MainViewController: UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor)
         ])
     }
+    
+    // TODO: bind
+    private func bind() {
+        
+    }
 }
 
-extension MainViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+extension MainViewController: UICollectionViewDataSource {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        Section.allCases.count
+    }
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch Section(rawValue: section) {
         case .popular: popularMovies.count
@@ -128,5 +149,18 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
         headerView.configure(with: sectionType.title)
         
         return headerView
+    }
+}
+
+extension MainViewController : UICollectionViewDelegate {
+    // TODO: push to youtube
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        switch Section(rawValue: indexPath.section) {
+        case .popular:
+        case .topRated:
+        case .upcoming:
+        default:
+            return
+        }
     }
 }

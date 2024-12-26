@@ -11,4 +11,6 @@ class NetworkManager {
     static let shared = NetworkManager()
     
     private init() {}
+    
+    // TODO: fetch<T: Decodable>(url: URL) -> Single<T>
 }
