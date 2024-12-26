@@ -218,8 +218,9 @@ extension MainViewController: UICollectionViewDelegate {
             vm.fetchTrailerKey(movie: popularMovies[indexPath.item])
                 .observe(on: MainScheduler.instance)
                 .subscribe(
-                    onSuccess: { _ in // [weak self] in
-                        print("")
+                    onSuccess: { [weak self] key in
+                        print(key)
+                        self?.navigationController?.pushViewController(YoutubeViewController(key: key), animated: true)
                     },
                     onFailure: { error in
                         print("error occurred : \(error.localizedDescription)")
@@ -230,8 +231,8 @@ extension MainViewController: UICollectionViewDelegate {
             vm.fetchTrailerKey(movie: topRatedMovies[indexPath.item])
                 .observe(on: MainScheduler.instance)
                 .subscribe(
-                    onSuccess: { _ in // [weak self] in
-                        print("")
+                    onSuccess: { [weak self] key in
+                        self?.navigationController?.pushViewController(YoutubeViewController(key: key), animated: true)
                     },
                     onFailure: { error in
                         print("error occurred : \(error.localizedDescription)")
@@ -242,8 +243,8 @@ extension MainViewController: UICollectionViewDelegate {
             vm.fetchTrailerKey(movie: upcomingMovies[indexPath.item])
                 .observe(on: MainScheduler.instance)
                 .subscribe(
-                    onSuccess: { _ in // [weak self] in
-                        print("")
+                    onSuccess: { [weak self] key in
+                        self?.navigationController?.pushViewController(YoutubeViewController(key: key), animated: true)
                     },
                     onFailure: { error in
                         print("error occurred : \(error.localizedDescription)")
