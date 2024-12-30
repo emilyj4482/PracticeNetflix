@@ -6,37 +6,82 @@
 //
 
 import Foundation
+import Combine
 
 // 넷플릭스 앱의 핵심 비즈니스 로직 : 서버로부터 영화 정보를 불러오는 것
 class MainViewModel {
     
+    private var cancellables = Set<AnyCancellable>()
     private let networkManager = NetworkManager.shared
     
-    init() {
+    let popularMovieSubject = CurrentValueSubject<[Movie], Error>([])
+    let topRatedMovieSubject = CurrentValueSubject<[Movie], Error>([])
+    let upcomingMovieSubject = CurrentValueSubject<[Movie], Error>([])
+    
+    func fetch() {
         fetchPopularMovies()
         fetchTopRatedMovies()
         fetchUpcomingMovies()
     }
     
-    func fetchPopularMovies() {
+    private func fetchPopularMovies() {
         guard let url = URL(string: "https://api.themoviedb.org/3/movie/popular?api_key=\(APIKey.key)") else {
-            // subject.onError
+            popularMovieSubject.send(completion: .failure(NetworkError.invalidURL))
             return
         }
+        
+        networkManager.fetch(url: url)
+            .sink { [weak self] completion in
+                switch completion {
+                case .failure(let error):
+                    self?.popularMovieSubject.send(completion: .failure(error))
+                case .finished:
+                    self?.popularMovieSubject.send(completion: .finished)
+                }
+            } receiveValue: { [weak self] (movieResponse: MovieResponse) in
+                self?.popularMovieSubject.send(movieResponse.results)
+            }
+            .store(in: &cancellables)
     }
     
-    func fetchTopRatedMovies() {
+    private func fetchTopRatedMovies() {
         guard let url = URL(string: "https://api.themoviedb.org/3/movie/top_rated?api_key=\(APIKey.key)") else {
-            // subject.onError
+            topRatedMovieSubject.send(completion: .failure(NetworkError.invalidURL))
             return
         }
+        
+        networkManager.fetch(url: url)
+            .sink { [weak self] completion in
+                switch completion {
+                case .failure(let error):
+                    self?.topRatedMovieSubject.send(completion: .failure(error))
+                case .finished:
+                    self?.topRatedMovieSubject.send(completion: .finished)
+                }
+            } receiveValue: { [weak self] (movieResponse: MovieResponse) in
+                self?.topRatedMovieSubject.send(movieResponse.results)
+            }
+            .store(in: &cancellables)
     }
     
-    func fetchUpcomingMovies() {
+    private func fetchUpcomingMovies() {
         guard let url = URL(string: "https://api.themoviedb.org/3/movie/upcoming?api_key=\(APIKey.key)") else {
-            // subject.onError
+            upcomingMovieSubject.send(completion: .failure(NetworkError.invalidURL))
             return
         }
+        
+        networkManager.fetch(url: url)
+            .sink { [weak self] completion in
+                switch completion {
+                case .failure(let error):
+                    self?.upcomingMovieSubject.send(completion: .failure(error))
+                case .finished:
+                    self?.upcomingMovieSubject.send(completion: .finished)
+                }
+            } receiveValue: { [weak self] (movieResponse: MovieResponse) in
+                self?.upcomingMovieSubject.send(movieResponse.results)
+            }
+            .store(in: &cancellables)
     }
     
     // TODO: fetchTrailerKey(movie: Movie) -> Single<String>

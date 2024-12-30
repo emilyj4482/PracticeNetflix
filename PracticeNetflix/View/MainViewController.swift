@@ -6,8 +6,11 @@
 //
 
 import UIKit
+import Combine
 
 class MainViewController: UIViewController {
+    
+    private var cancellables = Set<AnyCancellable>()
     
     private let vm = MainViewModel()
     
@@ -73,6 +76,11 @@ class MainViewController: UIViewController {
         bind()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        vm.fetch()
+    }
+    
     private func setupUI() {
         view.backgroundColor = .black
         
@@ -95,9 +103,54 @@ class MainViewController: UIViewController {
         ])
     }
     
-    // TODO: bind
     private func bind() {
+        vm.popularMovieSubject
+            .receive(on: DispatchQueue.main)
+            .sink { completion in
+                switch completion {
+                case .finished:
+                    print(completion)
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+            } receiveValue: { [weak self] movies in
+                self?.popularMovies = movies
+                self?.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
         
+        vm.topRatedMovieSubject
+            .receive(on: DispatchQueue.main)
+            .sink (
+                receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        print(completion)
+                    case .failure(let error):
+                        print(error.localizedDescription)
+                    }
+                },
+                receiveValue: { [weak self] movies in
+                    self?.topRatedMovies = movies
+                    self?.collectionView.reloadData()
+                }
+            )
+            .store(in: &cancellables)
+        
+        vm.upcomingMovieSubject
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    print(completion)
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+            }, receiveValue: { [weak self] movies in
+                self?.upcomingMovies = movies
+                self?.collectionView.reloadData()
+            })
+            .store(in: &cancellables)
     }
 }
 
@@ -124,9 +177,9 @@ extension MainViewController: UICollectionViewDataSource {
         case .popular:
             cell.configure(with: popularMovies[indexPath.item])
         case .topRated:
-            cell.configure(with: popularMovies[indexPath.item])
+            cell.configure(with: topRatedMovies[indexPath.item])
         case .upcoming:
-            cell.configure(with: popularMovies[indexPath.item])
+            cell.configure(with: upcomingMovies[indexPath.item])
         default:
             return UICollectionViewCell()
         }
@@ -155,6 +208,7 @@ extension MainViewController: UICollectionViewDataSource {
 extension MainViewController : UICollectionViewDelegate {
     // TODO: push to youtube
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        /*
         switch Section(rawValue: indexPath.section) {
         case .popular:
         case .topRated:
@@ -162,5 +216,6 @@ extension MainViewController : UICollectionViewDelegate {
         default:
             return
         }
+         */
     }
 }
