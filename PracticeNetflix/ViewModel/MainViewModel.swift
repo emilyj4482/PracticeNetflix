@@ -84,6 +84,33 @@ class MainViewModel {
             .store(in: &cancellables)
     }
     
-    // TODO: fetchTrailerKey(movie: Movie) -> Single<String>
-    // let urlString = "https://api.themoviedb.org/3/movie/\(movie.id)/videos?api_key=\(APIKey.key)"
+    func fetchTrailerKey(movie: Movie) -> AnyPublisher<String, Error> {
+        let urlString = "https://api.themoviedb.org/3/movie/\(movie.id)/videos?api_key=\(APIKey.key)"
+        
+        guard let url = URL(string: urlString) else {
+            return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
+        }
+        
+        return Future<String, Error> { [weak self] promise in
+            guard let self = self else { return }
+            networkManager.fetch(url: url)
+                .sink (
+                    receiveCompletion: { completion in
+                        if case .failure(let error) = completion {
+                            promise(.failure(error))
+                        }
+                    },
+                    receiveValue: { (videoResponse: VideoResponse) in
+                        if let trailer = videoResponse.results.first(where: { $0.type == "Trailer" && $0.site == "YouTube" }),
+                           let key = trailer.key {
+                            promise(.success(key))
+                        } else {
+                            promise(.failure(NetworkError.dataFetchFail))
+                        }
+                    }
+                )
+                .store(in: &cancellables)
+        }
+        .eraseToAnyPublisher()
+    }
 }

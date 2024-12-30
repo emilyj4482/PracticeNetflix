@@ -29,6 +29,8 @@ class YoutubeViewController: UIViewController {
     }
     
     private func setupUI() {
+        view.backgroundColor = .black
+        
         view.addSubview(playerView)
         
         playerView.translatesAutoresizingMaskIntoConstraints = false

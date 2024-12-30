@@ -74,10 +74,6 @@ class MainViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         bind()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
         vm.fetch()
     }
     
@@ -206,16 +202,52 @@ extension MainViewController: UICollectionViewDataSource {
 }
 
 extension MainViewController : UICollectionViewDelegate {
-    // TODO: push to youtube
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        /*
         switch Section(rawValue: indexPath.section) {
         case .popular:
+            vm.fetchTrailerKey(movie: popularMovies[indexPath.item])
+                .receive(on: DispatchQueue.main)
+                .sink(
+                    receiveCompletion: { completion in
+                        if case .failure(let error) = completion {
+                            print("error occurred : \(error.localizedDescription)")
+                        }
+                    },
+                    receiveValue: { [weak self] key in
+                        self?.navigationController?.pushViewController(YoutubeViewController(key: key), animated: true)
+                    }
+                )
+                .store(in: &cancellables)
         case .topRated:
+            vm.fetchTrailerKey(movie: topRatedMovies[indexPath.item])
+                .receive(on: DispatchQueue.main)
+                .sink(
+                    receiveCompletion: { completion in
+                        if case .failure(let error) = completion {
+                            print("error occurred : \(error.localizedDescription)")
+                        }
+                    },
+                    receiveValue: { [weak self] key in
+                        self?.navigationController?.pushViewController(YoutubeViewController(key: key), animated: true)
+                    }
+                )
+                .store(in: &cancellables)
         case .upcoming:
+            vm.fetchTrailerKey(movie: upcomingMovies[indexPath.item])
+                .receive(on: DispatchQueue.main)
+                .sink(
+                    receiveCompletion: { completion in
+                        if case .failure(let error) = completion {
+                            print("error occurred : \(error.localizedDescription)")
+                        }
+                    },
+                    receiveValue: { [weak self] key in
+                        self?.navigationController?.pushViewController(YoutubeViewController(key: key), animated: true)
+                    }
+                )
+                .store(in: &cancellables)
         default:
             return
         }
-         */
     }
 }
